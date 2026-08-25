@@ -17,14 +17,18 @@ public final class DataProviderObservability {
     private DataProviderObservability() { }
 
     public static DataProviderObserver observer(ObservabilityRuntime runtime) {
-        TelemetryRecorder recorder = ObservabilityAccess.recorder(Objects.requireNonNull(runtime, "runtime"));
-        return context -> start(recorder, context);
+        Objects.requireNonNull(runtime, "runtime");
+        if (!runtime.enabled()) {
+            return DataProviderObserver.noop();
+        }
+        return context -> start(ObservabilityAccess.recorder(runtime), context);
     }
 
     /** Returns an observed facade without mutating DataProvider global state. */
     public static DataProviderAPI observe(DataProviderAPI api, ObservabilityRuntime runtime) {
         Objects.requireNonNull(api, "api");
-        return api.withObserver(observer(runtime));
+        Objects.requireNonNull(runtime, "runtime");
+        return runtime.enabled() ? api.withObserver(observer(runtime)) : api;
     }
 
     private static DataProviderObservation start(TelemetryRecorder recorder, DataProviderOperationContext context) {
