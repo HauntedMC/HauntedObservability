@@ -17,31 +17,40 @@ public final class DataRegistryObservability {
     private DataRegistryObservability() { }
 
     public static DataRegistryObserver observer(ObservabilityRuntime runtime) {
-        TelemetryRecorder recorder = ObservabilityAccess.recorder(Objects.requireNonNull(runtime, "runtime"));
-        return context -> {
-            TelemetryOperation telemetry = recorder.start(OperationSpec.dataRegistry(context.operation()));
-            return new DataRegistryObservation() {
-                @Override
-                public nl.hauntedmc.dataregistry.api.observation.DataRegistryObservationScope openScope() {
-                    var scope = telemetry.openScope();
-                    return scope::close;
-                }
-
-                @Override
-                public void completed(
-                        nl.hauntedmc.dataregistry.api.observation.DataRegistryOperationOutcome outcome,
-                        int attempts,
-                        Throwable failure
-                ) {
-                    telemetry.complete(outcome.name(), attempts, failure);
-                }
-            };
-        };
+        Objects.requireNonNull(runtime, "runtime");
+        if (!runtime.enabled()) {
+            return DataRegistryObserver.noop();
+        }
+        return context -> start(ObservabilityAccess.recorder(runtime), context);
     }
 
     /** Registers the observer against the actual runtime capability and returns its lifecycle handle. */
     public static DataRegistryObservationRegistration register(DataRegistryApiProvider provider, ObservabilityRuntime runtime) {
         Objects.requireNonNull(provider, "provider");
+        Objects.requireNonNull(runtime, "runtime");
+        if (!runtime.enabled()) {
+            return DataRegistryObservationRegistration.noop();
+        }
         return provider.getDataRegistryInstrumentation().registerObserver(observer(runtime));
+    }
+
+    private static DataRegistryObservation start(TelemetryRecorder recorder, nl.hauntedmc.dataregistry.api.observation.DataRegistryOperationContext context) {
+        TelemetryOperation telemetry = recorder.start(OperationSpec.dataRegistry(context.operation()));
+        return new DataRegistryObservation() {
+            @Override
+            public nl.hauntedmc.dataregistry.api.observation.DataRegistryObservationScope openScope() {
+                var scope = telemetry.openScope();
+                return scope::close;
+            }
+
+            @Override
+            public void completed(
+                    nl.hauntedmc.dataregistry.api.observation.DataRegistryOperationOutcome outcome,
+                    int attempts,
+                    Throwable failure
+            ) {
+                telemetry.complete(outcome.name(), attempts, failure);
+            }
+        };
     }
 }
