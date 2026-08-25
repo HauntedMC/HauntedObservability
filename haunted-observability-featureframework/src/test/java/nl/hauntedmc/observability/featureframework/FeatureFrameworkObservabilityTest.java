@@ -10,6 +10,7 @@ import nl.hauntedmc.observability.testkit.InMemoryObservability;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FeatureFrameworkObservabilityTest {
     private static final AttributeKey<String> FEATURE_ID = AttributeKey.stringKey("feature.id");
@@ -44,5 +45,17 @@ class FeatureFrameworkObservabilityTest {
             assertEquals(StatusCode.ERROR, observability.spans().getFirst().getStatus().getStatusCode());
             assertEquals(1, observability.logs().size());
         }
+    }
+
+    @Test
+    void attachedObserverStopsRecordingAfterRuntimeCloses() {
+        InMemoryObservability observability = InMemoryObservability.create();
+        var observer = FeatureFrameworkObservability.observer(observability.runtime());
+        observability.close();
+
+        var observation = observer.start(FeatureFrameworkOperationContext.host(FeatureFrameworkOperationKind.HOST_STOP));
+        observation.completed(FeatureFrameworkOperationOutcome.SUCCESS, null);
+
+        assertTrue(observability.spans().isEmpty());
     }
 }
