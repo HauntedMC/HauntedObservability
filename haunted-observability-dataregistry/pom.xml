@@ -7,6 +7,10 @@
     <dependency><groupId>${project.groupId}</groupId><artifactId>haunted-observability-core</artifactId><version>${project.version}</version></dependency>
     <dependency><groupId>nl.hauntedmc.dataregistry</groupId><artifactId>dataregistry-api</artifactId><version>${dataregistry.version}</version><scope>provided</scope></dependency>
     <dependency><groupId>${project.groupId}</groupId><artifactId>haunted-observability-testkit</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>${project.groupId}</groupId><artifactId>haunted-observability-featureframework</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>${project.groupId}</groupId><artifactId>haunted-observability-dataprovider</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>nl.hauntedmc.featureframework</groupId><artifactId>featureframework-api</artifactId><version>${featureframework.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>nl.hauntedmc.dataprovider</groupId><artifactId>dataprovider-api</artifactId><version>${dataprovider.version}</version><scope>test</scope></dependency>
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>${junit.version}</version><scope>test</scope></dependency>
   </dependencies>
 </project>
