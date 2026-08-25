@@ -16,7 +16,8 @@ import nl.hauntedmc.observability.featureframework.FeatureFrameworkObservability
 import nl.hauntedmc.observability.testkit.InMemoryObservability;
 import org.junit.jupiter.api.Test;
 
-import java.util.function.Function;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -61,6 +62,19 @@ class TraceHierarchyTest {
             assertFalse(featureSpan.getSpanId().isBlank());
             assertEquals(featureSpan.getSpanId(), registrySpan.getParentSpanId());
             assertEquals(registrySpan.getSpanId(), dataSpan.getParentSpanId());
+
+            Set<String> metricNames = observability.metrics().stream()
+                    .map(metric -> metric.getName())
+                    .collect(Collectors.toSet());
+            assertEquals(Set.of(
+                    "hauntedmc.featureframework.operation.count",
+                    "hauntedmc.featureframework.operation.duration",
+                    "hauntedmc.dataprovider.operation.count",
+                    "hauntedmc.dataprovider.operation.duration",
+                    "hauntedmc.dataregistry.operation.count",
+                    "hauntedmc.dataregistry.operation.duration",
+                    "hauntedmc.dataregistry.operation.attempts"
+            ), metricNames);
         }
     }
 
