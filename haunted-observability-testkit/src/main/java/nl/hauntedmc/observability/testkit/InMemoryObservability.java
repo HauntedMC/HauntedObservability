@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /** In-memory OpenTelemetry runtime for integration and adapter tests. */
 public final class InMemoryObservability implements RecorderBackedRuntime {
     private final InMemorySpanExporter spanExporter = InMemorySpanExporter.create();
-    private final InMemoryMetricReader metricReader = InMemoryMetricReader.create();
+    private final InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     private final InMemoryLogRecordExporter logExporter = InMemoryLogRecordExporter.create();
     private final SdkTracerProvider tracerProvider;
     private final SdkMeterProvider meterProvider;
@@ -53,7 +53,13 @@ public final class InMemoryObservability implements RecorderBackedRuntime {
     public List<SpanData> spans() { return spanExporter.getFinishedSpanItems(); }
     public List<MetricData> metrics() { return List.copyOf(metricReader.collectAllMetrics()); }
     public List<LogRecordData> logs() { return logExporter.getFinishedLogRecordItems(); }
-    public void reset() { spanExporter.reset(); logExporter.reset(); metricReader.collectAllMetrics(); }
+
+    /** Clears finished spans/logs and drains delta metrics for a clean assertion checkpoint. */
+    public void reset() {
+        spanExporter.reset();
+        logExporter.reset();
+        metricReader.collectAllMetrics();
+    }
 
     @Override public ObservabilityRuntimeState state() { return closed.get() ? ObservabilityRuntimeState.CLOSED : ObservabilityRuntimeState.ACTIVE; }
     @Override public Optional<Throwable> startupFailure() { return Optional.empty(); }
