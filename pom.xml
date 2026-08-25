@@ -97,6 +97,10 @@
                     </plugin>
                     <plugin>
                         <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <doclint>all,-missing</doclint>
+                            <failOnWarnings>true</failOnWarnings>
+                        </configuration>
                         <executions><execution><id>javadoc</id><goals><goal>jar</goal></goals></execution></executions>
                     </plugin>
                 </plugins>
