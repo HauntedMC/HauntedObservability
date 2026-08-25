@@ -17,8 +17,11 @@ public final class FeatureFrameworkObservability {
     private FeatureFrameworkObservability() { }
 
     public static FeatureFrameworkObserver observer(ObservabilityRuntime runtime) {
-        TelemetryRecorder recorder = ObservabilityAccess.recorder(Objects.requireNonNull(runtime, "runtime"));
-        return context -> start(recorder, context);
+        Objects.requireNonNull(runtime, "runtime");
+        if (!runtime.enabled()) {
+            return FeatureFrameworkObserver.noop();
+        }
+        return context -> start(ObservabilityAccess.recorder(runtime), context);
     }
 
     private static FeatureFrameworkObservation start(TelemetryRecorder recorder, FeatureFrameworkOperationContext context) {
