@@ -31,9 +31,7 @@ public final class ObservabilityRuntimes {
             if (!config.enabled()) return new NoopObservabilityRuntime(ObservabilityRuntimeState.DISABLED, null);
             try {
                 return SdkObservabilityRuntime.start(identity, config);
-            } catch (Throwable failure) {
-                if (failure instanceof VirtualMachineError virtualMachineError) throw virtualMachineError;
-                if (failure instanceof ThreadDeath threadDeath) throw threadDeath;
+            } catch (RuntimeException failure) {
                 return new NoopObservabilityRuntime(ObservabilityRuntimeState.FAILED, failure);
             }
         }
