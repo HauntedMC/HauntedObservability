@@ -36,9 +36,9 @@ class DataRegistryObservabilityTest {
                     .filter(metric -> metric.getName().equals("hauntedmc.dataregistry.operation.attempts"))
                     .findFirst()
                     .orElseThrow();
-            var point = attemptsMetric.getLongHistogramData().getPoints().iterator().next();
+            var point = attemptsMetric.getHistogramData().getPoints().iterator().next();
             assertEquals(1L, point.getCount());
-            assertEquals(3L, point.getSum());
+            assertEquals(3.0, point.getSum());
             assertFalse(attemptsMetric.toString().contains("attempts=3"));
         }
     }
