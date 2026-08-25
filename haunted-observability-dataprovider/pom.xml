@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <parent><groupId>nl.hauntedmc.observability</groupId><artifactId>haunted-observability-parent</artifactId><version>${revision}</version></parent>
+  <artifactId>haunted-observability-dataprovider</artifactId><name>HauntedObservability DataProvider</name>
+  <dependencies>
+    <dependency><groupId>${project.groupId}</groupId><artifactId>haunted-observability-core</artifactId><version>${project.version}</version></dependency>
+    <dependency><groupId>nl.hauntedmc.dataprovider</groupId><artifactId>dataprovider-api</artifactId><version>${dataprovider.version}</version></dependency>
+    <dependency><groupId>${project.groupId}</groupId><artifactId>haunted-observability-testkit</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>${junit.version}</version><scope>test</scope></dependency>
+  </dependencies>
+</project>
