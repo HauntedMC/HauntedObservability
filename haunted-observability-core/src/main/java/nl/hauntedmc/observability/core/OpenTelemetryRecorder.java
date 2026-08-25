@@ -10,6 +10,7 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.ObservableLongGauge;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
@@ -19,6 +20,7 @@ import io.opentelemetry.context.Scope;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BooleanSupplier;
 
 /** OpenTelemetry implementation of the bounded HauntedObservability recording SPI. */
 public final class OpenTelemetryRecorder implements TelemetryRecorder {
@@ -34,6 +36,7 @@ public final class OpenTelemetryRecorder implements TelemetryRecorder {
 
     private final Tracer tracer;
     private final Logger logger;
+    private final Meter meter;
     private final Instruments featureFramework;
     private final Instruments dataProvider;
     private final Instruments dataRegistry;
@@ -43,7 +46,7 @@ public final class OpenTelemetryRecorder implements TelemetryRecorder {
         Objects.requireNonNull(openTelemetry, "openTelemetry");
         this.tracer = openTelemetry.tracerBuilder("nl.hauntedmc.observability").build();
         this.logger = openTelemetry.getLogsBridge().loggerBuilder("nl.hauntedmc.observability").build();
-        Meter meter = openTelemetry.meterBuilder("nl.hauntedmc.observability").build();
+        this.meter = openTelemetry.meterBuilder("nl.hauntedmc.observability").build();
         this.featureFramework = instruments(meter,
                 "hauntedmc.featureframework.operation.count",
                 "hauntedmc.featureframework.operation.duration");
@@ -71,6 +74,23 @@ public final class OpenTelemetryRecorder implements TelemetryRecorder {
         if (spec.databaseType() != null) span.setAttribute(DP_DATABASE_TYPE, spec.databaseType());
         if (spec.ownerScope() != null) span.setAttribute(DP_OWNER_SCOPE, spec.ownerScope());
         return new RecordedOperation(spec, span, System.nanoTime());
+    }
+
+    @Override
+    public TelemetryRegistration registerDataRegistryReadiness(BooleanSupplier readiness) {
+        Objects.requireNonNull(readiness, "readiness");
+        ObservableLongGauge gauge = meter.gaugeBuilder("hauntedmc.dataregistry.ready")
+                .ofLongs()
+                .setUnit("1")
+                .setDescription("Whether the DataRegistry public facade is ready (1 ready, 0 not ready).")
+                .buildWithCallback(measurement -> {
+                    try {
+                        measurement.record(readiness.getAsBoolean() ? 1L : 0L);
+                    } catch (RuntimeException ignored) {
+                        // An observability callback must never affect DataRegistry or application behavior.
+                    }
+                });
+        return gauge::close;
     }
 
     private static Instruments instruments(Meter meter, String countName, String durationName) {
