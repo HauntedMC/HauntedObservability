@@ -125,8 +125,11 @@ public final class OpenTelemetryRecorder implements TelemetryRecorder {
                     span.setAttribute(DR_ATTEMPTS, (long) normalizedAttempts);
                     dataRegistryAttempts.record(normalizedAttempts, metricAttributes);
                 }
+                boolean error = isErrorOutcome(spec.layer(), normalizedOutcome) || failure != null;
                 if (failure != null) {
-                    span.recordException(failure);
+                    span.setAttribute(EXCEPTION_TYPE, failure.getClass().getName());
+                }
+                if (error) {
                     span.setStatus(StatusCode.ERROR);
                     emitFailureLog(spec, normalizedOutcome, failure, span);
                 }
@@ -137,15 +140,17 @@ public final class OpenTelemetryRecorder implements TelemetryRecorder {
     }
 
     private void emitFailureLog(OperationSpec spec, String outcome, Throwable failure, Span span) {
-        logger.logRecordBuilder()
+        var builder = logger.logRecordBuilder()
                 .setSeverity(Severity.ERROR)
                 .setBody("Observed operation failed")
                 .setContext(span.storeInContext(Context.current()))
                 .setAttribute(LAYER, spec.layer().value())
                 .setAttribute(OPERATION, spec.operation())
-                .setAttribute(OUTCOME, outcome)
-                .setAttribute(EXCEPTION_TYPE, failure.getClass().getName())
-                .emit();
+                .setAttribute(OUTCOME, outcome);
+        if (failure != null) {
+            builder.setAttribute(EXCEPTION_TYPE, failure.getClass().getName());
+        }
+        builder.emit();
     }
 
     private static Attributes metricAttributes(OperationSpec spec, String outcome) {
@@ -162,6 +167,14 @@ public final class OpenTelemetryRecorder implements TelemetryRecorder {
             case DATAREGISTRY -> { }
         }
         return builder.build();
+    }
+
+    private static boolean isErrorOutcome(ObservabilityLayer layer, String outcome) {
+        return switch (layer) {
+            case FEATUREFRAMEWORK -> "failure".equals(outcome);
+            case DATAPROVIDER -> !"success".equals(outcome);
+            case DATAREGISTRY -> !("success".equals(outcome) || "duplicate".equals(outcome));
+        };
     }
 
     private static String normalizeOutcome(String outcome) {
