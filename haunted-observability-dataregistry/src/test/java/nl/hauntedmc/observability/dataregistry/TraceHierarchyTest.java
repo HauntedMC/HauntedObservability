@@ -4,10 +4,12 @@ import nl.hauntedmc.dataprovider.api.OwnerScope;
 import nl.hauntedmc.dataprovider.api.observation.DataProviderOperationContext;
 import nl.hauntedmc.dataprovider.database.DatabaseType;
 import nl.hauntedmc.dataregistry.api.observation.DataRegistryObservation;
+import nl.hauntedmc.dataregistry.api.observation.DataRegistryObservationScope;
 import nl.hauntedmc.dataregistry.api.observation.DataRegistryOperationContext;
 import nl.hauntedmc.dataregistry.api.observation.DataRegistryOperationOutcome;
 import nl.hauntedmc.featureframework.api.feature.FeatureId;
 import nl.hauntedmc.featureframework.api.observation.FeatureFrameworkObservation;
+import nl.hauntedmc.featureframework.api.observation.FeatureFrameworkObservationScope;
 import nl.hauntedmc.featureframework.api.observation.FeatureFrameworkOperationContext;
 import nl.hauntedmc.featureframework.api.observation.FeatureFrameworkOperationKind;
 import nl.hauntedmc.featureframework.api.observation.FeatureFrameworkOperationOutcome;
@@ -35,12 +37,14 @@ class TraceHierarchyTest {
                     FeatureFrameworkOperationKind.FEATURE_LOAD,
                     FeatureId.of("friends")
             ));
-            try (var featureScope = featureObservation.openScope()) {
+            FeatureFrameworkObservationScope featureScope = featureObservation.openScope();
+            try {
                 DataRegistryObservation registryObservation = drObserver.start(
                         new DataRegistryOperationContext("player.identity.lookup")
                 );
                 Thread worker = Thread.ofVirtual().start(() -> {
-                    try (var registryScope = registryObservation.openScope()) {
+                    DataRegistryObservationScope registryScope = registryObservation.openScope();
+                    try {
                         var dataObservation = dpObserver.start(new DataProviderOperationContext(
                                 "serverfeatures",
                                 OwnerScope.of("feature:friends"),
@@ -48,10 +52,14 @@ class TraceHierarchyTest {
                                 "relational.queryForSingle"
                         ));
                         dataObservation.succeeded();
+                    } finally {
+                        registryScope.close();
                     }
                     registryObservation.completed(DataRegistryOperationOutcome.SUCCESS, 1, null);
                 });
                 worker.join();
+            } finally {
+                featureScope.close();
             }
             featureObservation.completed(FeatureFrameworkOperationOutcome.SUCCESS, null);
 
