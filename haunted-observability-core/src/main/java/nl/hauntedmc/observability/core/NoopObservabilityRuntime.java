@@ -20,7 +20,13 @@ final class NoopObservabilityRuntime implements ObservabilityRuntime, RecorderBa
 
     @Override public ObservabilityRuntimeState state() { return closed.get() ? ObservabilityRuntimeState.CLOSED : initialState; }
     @Override public Optional<Throwable> startupFailure() { return Optional.ofNullable(startupFailure); }
-    @Override public boolean forceFlush(Duration timeout) { Objects.requireNonNull(timeout, "timeout"); return true; }
+    @Override public boolean forceFlush(Duration timeout) {
+        Objects.requireNonNull(timeout, "timeout");
+        if (timeout.isNegative() || timeout.isZero()) {
+            throw new IllegalArgumentException("timeout must be positive.");
+        }
+        return true;
+    }
     @Override public boolean forceFlush() { return true; }
     @Override public void close() { closed.set(true); }
     @Override public TelemetryRecorder recorder() { return TelemetryRecorder.noop(); }
