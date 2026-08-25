@@ -6,6 +6,7 @@
   <dependencies>
     <dependency><groupId>${project.groupId}</groupId><artifactId>haunted-observability-core</artifactId><version>${project.version}</version></dependency>
     <dependency><groupId>com.velocitypowered</groupId><artifactId>velocity-api</artifactId><version>${velocity.version}</version><scope>provided</scope></dependency>
+    <dependency><groupId>org.jetbrains</groupId><artifactId>annotations</artifactId><scope>provided</scope></dependency>
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>${junit.version}</version><scope>test</scope></dependency>
   </dependencies>
 </project>
