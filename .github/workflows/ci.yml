@@ -36,7 +36,7 @@ jobs:
           test -n "$PACKAGES_TOKEN" || { echo "Missing HAUNTEDMC_PACKAGES_TOKEN" >&2; exit 1; }
       - name: Verify architecture boundaries
         run: bash scripts/verify-architecture.sh
-      - name: Verify and install reactor
-        run: mvn -U -B -ntp install
+      - name: Verify release-profile reactor
+        run: mvn -U -B -ntp -Prelease install
       - name: Verify external BOM consumer
         run: bash scripts/verify-bom-consumer.sh
