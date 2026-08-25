@@ -14,7 +14,11 @@ cat > "$WORK/pom.xml" <<POM
   <groupId>example</groupId>
   <artifactId>observability-consumer</artifactId>
   <version>1.0.0</version>
-  <properties><maven.compiler.release>25</maven.compiler.release></properties>
+  <properties>
+    <maven.compiler.release>25</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+  </properties>
   <dependencyManagement><dependencies><dependency>
     <groupId>nl.hauntedmc.observability</groupId>
     <artifactId>haunted-observability-bom</artifactId>
