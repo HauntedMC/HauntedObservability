@@ -66,7 +66,45 @@ final class SdkObservabilityRuntime implements RecorderBackedRuntime {
     static SdkObservabilityRuntime start(ObservabilityIdentity identity, ObservabilityConfig config) {
         Objects.requireNonNull(identity, "identity");
         Objects.requireNonNull(config, "config");
-        Resource resource = Resource.getDefault().merge(Resource.create(Attributes.builder()
+
+        SdkTracerProvider tracerProvider = null;
+        SdkMeterProvider meterProvider = null;
+        SdkLoggerProvider loggerProvider = null;
+        RuntimeTelemetry runtimeTelemetry = null;
+        try {
+            Resource resource = resource(identity);
+            tracerProvider = tracerProvider(config, resource);
+            meterProvider = meterProvider(config, resource);
+            loggerProvider = loggerProvider(config, resource);
+
+            OpenTelemetrySdk sdk = OpenTelemetrySdk.builder()
+                    .setTracerProvider(tracerProvider)
+                    .setMeterProvider(meterProvider)
+                    .setLoggerProvider(loggerProvider)
+                    .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+                    .build();
+            runtimeTelemetry = config.metricsEnabled() && config.jvmMetricsEnabled()
+                    ? RuntimeTelemetry.create(sdk)
+                    : null;
+            return new SdkObservabilityRuntime(
+                    config,
+                    sdk,
+                    tracerProvider,
+                    meterProvider,
+                    loggerProvider,
+                    runtimeTelemetry
+            );
+        } catch (RuntimeException failure) {
+            closeRuntimeTelemetry(runtimeTelemetry);
+            shutdownQuietly(loggerProvider);
+            shutdownQuietly(meterProvider);
+            shutdownQuietly(tracerProvider);
+            throw failure;
+        }
+    }
+
+    private static Resource resource(ObservabilityIdentity identity) {
+        return Resource.getDefault().merge(Resource.create(Attributes.builder()
                 .put(SERVICE_NAMESPACE, "hauntedmc")
                 .put(SERVICE_NAME, identity.serviceName())
                 .put(SERVICE_VERSION, identity.serviceVersion())
@@ -77,8 +115,10 @@ final class SdkObservabilityRuntime implements RecorderBackedRuntime {
                 .put(HAUNTED_SERVER_NAME, identity.serverName())
                 .put(HAUNTED_SERVER_TYPE, identity.serverType())
                 .build()));
+    }
 
-        var tracerBuilder = SdkTracerProvider.builder()
+    private static SdkTracerProvider tracerProvider(ObservabilityConfig config, Resource resource) {
+        var builder = SdkTracerProvider.builder()
                 .setResource(resource)
                 .setSampler(config.tracesEnabled()
                         ? Sampler.parentBased(Sampler.traceIdRatioBased(config.traceSampleRatio()))
@@ -88,42 +128,35 @@ final class SdkObservabilityRuntime implements RecorderBackedRuntime {
                     .setEndpoint(config.otlpEndpoint().toString())
                     .setTimeout(config.exportTimeout())
                     .build();
-            tracerBuilder.addSpanProcessor(BatchSpanProcessor.builder(exporter).build());
+            builder.addSpanProcessor(BatchSpanProcessor.builder(exporter).build());
         }
-        SdkTracerProvider tracerProvider = tracerBuilder.build();
+        return builder.build();
+    }
 
-        var meterBuilder = SdkMeterProvider.builder().setResource(resource);
+    private static SdkMeterProvider meterProvider(ObservabilityConfig config, Resource resource) {
+        var builder = SdkMeterProvider.builder().setResource(resource);
         if (config.metricsEnabled()) {
             OtlpGrpcMetricExporter exporter = OtlpGrpcMetricExporter.builder()
                     .setEndpoint(config.otlpEndpoint().toString())
                     .setTimeout(config.exportTimeout())
                     .build();
-            meterBuilder.registerMetricReader(PeriodicMetricReader.builder(exporter)
+            builder.registerMetricReader(PeriodicMetricReader.builder(exporter)
                     .setInterval(config.metricExportInterval())
                     .build());
         }
-        SdkMeterProvider meterProvider = meterBuilder.build();
+        return builder.build();
+    }
 
-        var loggerBuilder = SdkLoggerProvider.builder().setResource(resource);
+    private static SdkLoggerProvider loggerProvider(ObservabilityConfig config, Resource resource) {
+        var builder = SdkLoggerProvider.builder().setResource(resource);
         if (config.logsEnabled()) {
             OtlpGrpcLogRecordExporter exporter = OtlpGrpcLogRecordExporter.builder()
                     .setEndpoint(config.otlpEndpoint().toString())
                     .setTimeout(config.exportTimeout())
                     .build();
-            loggerBuilder.addLogRecordProcessor(BatchLogRecordProcessor.builder(exporter).build());
+            builder.addLogRecordProcessor(BatchLogRecordProcessor.builder(exporter).build());
         }
-        SdkLoggerProvider loggerProvider = loggerBuilder.build();
-
-        OpenTelemetrySdk sdk = OpenTelemetrySdk.builder()
-                .setTracerProvider(tracerProvider)
-                .setMeterProvider(meterProvider)
-                .setLoggerProvider(loggerProvider)
-                .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-                .build();
-        RuntimeTelemetry runtimeTelemetry = config.metricsEnabled() && config.jvmMetricsEnabled()
-                ? RuntimeTelemetry.create(sdk)
-                : null;
-        return new SdkObservabilityRuntime(config, sdk, tracerProvider, meterProvider, loggerProvider, runtimeTelemetry);
+        return builder.build();
     }
 
     @Override public ObservabilityRuntimeState state() {
@@ -147,9 +180,7 @@ final class SdkObservabilityRuntime implements RecorderBackedRuntime {
     @Override
     public void close() {
         if (!closed.compareAndSet(false, true)) return;
-        if (runtimeTelemetry != null) {
-            try { runtimeTelemetry.close(); } catch (RuntimeException ignored) { }
-        }
+        closeRuntimeTelemetry(runtimeTelemetry);
         long deadline = System.nanoTime() + config.flushTimeout().toNanos();
         await(tracerProvider.forceFlush(), deadline);
         await(meterProvider.forceFlush(), deadline);
@@ -169,6 +200,42 @@ final class SdkObservabilityRuntime implements RecorderBackedRuntime {
             return result.isSuccess();
         } catch (RuntimeException ignored) {
             return false;
+        }
+    }
+
+    private static void closeRuntimeTelemetry(RuntimeTelemetry runtimeTelemetry) {
+        if (runtimeTelemetry == null) return;
+        try {
+            runtimeTelemetry.close();
+        } catch (RuntimeException ignored) {
+            // Observability cleanup must remain fail-open.
+        }
+    }
+
+    private static void shutdownQuietly(SdkTracerProvider provider) {
+        if (provider == null) return;
+        try {
+            provider.shutdown();
+        } catch (RuntimeException ignored) {
+            // Best-effort cleanup after failed startup.
+        }
+    }
+
+    private static void shutdownQuietly(SdkMeterProvider provider) {
+        if (provider == null) return;
+        try {
+            provider.shutdown();
+        } catch (RuntimeException ignored) {
+            // Best-effort cleanup after failed startup.
+        }
+    }
+
+    private static void shutdownQuietly(SdkLoggerProvider provider) {
+        if (provider == null) return;
+        try {
+            provider.shutdown();
+        } catch (RuntimeException ignored) {
+            // Best-effort cleanup after failed startup.
         }
     }
 }
