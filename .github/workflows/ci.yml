@@ -6,6 +6,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   packages: read
@@ -39,6 +43,6 @@ jobs:
       - name: Verify release bump helper
         run: ./update_version.sh --dry-run major
       - name: Verify release-profile reactor
-        run: mvn -U -B -ntp -Prelease install
+        run: ./mvnw -U -B -ntp -Prelease install
       - name: Verify external BOM consumer
         run: bash scripts/verify-bom-consumer.sh

@@ -1,9 +1,27 @@
-.idea/
-*.iml
-.DS_Store
+# Compiled class files and build output
+*.class
 target/
 **/target/
+
+# IDE / editor metadata
+.idea/
+*.iml
 .classpath
 .project
 .settings/
+.vscode/
+
+# Maven generated files
+pom.xml.versionsBackup
+dependency-reduced-pom.xml
+.flattened-pom.xml
+
+# Runtime / OS artifacts
 *.log
+.DS_Store
+hs_err_pid*
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.example

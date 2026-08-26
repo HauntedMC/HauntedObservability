@@ -6,6 +6,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   packages: read
@@ -15,14 +19,17 @@ jobs:
     name: Shared Maven policy
     uses: HauntedMC/HauntedPlatform/.github/workflows/maven-ci.yml@v1.3.0
     with:
-      maven-command: mvn -U -B -ntp -DskipTests verify
+      maven-command: ./mvnw -U -B -ntp -DskipTests verify
     secrets:
       PACKAGES_USER: ${{ secrets.HAUNTEDMC_PACKAGES_USERNAME }}
       PACKAGES_TOKEN: ${{ secrets.HAUNTEDMC_PACKAGES_TOKEN }}
 
   shellcheck:
-    name: ShellCheck
+    name: ShellCheck and release-bump smoke test
     runs-on: ubuntu-24.04
+    env:
+      PACKAGES_USER: ${{ secrets.HAUNTEDMC_PACKAGES_USERNAME }}
+      PACKAGES_TOKEN: ${{ secrets.HAUNTEDMC_PACKAGES_TOKEN }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -30,5 +37,5 @@ jobs:
       - shell: bash
         run: |
           mapfile -d '' scripts < <(git ls-files -z '*.sh')
-          if (( ${#scripts[@]} == 0 )); then exit 0; fi
-          shellcheck "${scripts[@]}"
+          if (( ${#scripts[@]} > 0 )); then shellcheck "${scripts[@]}"; fi
+      - run: ./update_version.sh --dry-run major
