@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
-VERSION="$(mvn -q -ntp -DforceStdout help:evaluate -Dexpression=project.version | tail -n 1)"
+VERSION="$(./mvnw -q -ntp -DforceStdout help:evaluate -Dexpression=project.version | tail -n 1)"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 mkdir -p "$WORK/src/main/java/example"
@@ -49,4 +49,4 @@ public final class Consumer {
 }
 JAVA
 
-mvn -B -ntp -f "$WORK/pom.xml" -DskipTests package
+./mvnw -B -ntp -f "$WORK/pom.xml" -DskipTests package
