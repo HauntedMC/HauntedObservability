@@ -75,8 +75,8 @@
     </modules>
 
     <properties>
-        <revision>0.1.0</revision>
-        <project.build.outputTimestamp>2026-08-25T00:00:00Z</project.build.outputTimestamp>
+        <revision>1.0.0</revision>
+        <project.build.outputTimestamp>2026-08-26T00:00:00Z</project.build.outputTimestamp>
         <featureframework.version>1.7.0</featureframework.version>
         <dataprovider.version>3.3.0</dataprovider.version>
         <dataregistry.version>1.15.0</dataregistry.version>
