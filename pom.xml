@@ -21,15 +21,38 @@
     <url>https://github.com/HauntedMC/HauntedObservability</url>
     <inceptionYear>2026</inceptionYear>
 
-    <organization><name>HauntedMC</name><url>https://www.hauntedmc.nl</url></organization>
-    <licenses><license><name>GNU Affero General Public License v3.0</name><url>https://www.gnu.org/licenses/agpl-3.0.txt</url><distribution>repo</distribution></license></licenses>
-    <developers><developer><id>HauntedMC</id><name>HauntedMC</name><url>https://www.hauntedmc.nl</url></developer></developers>
+    <organization>
+        <name>HauntedMC</name>
+        <url>https://www.hauntedmc.nl</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>GNU Affero General Public License v3.0</name>
+            <url>https://www.gnu.org/licenses/agpl-3.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>HauntedMC</id>
+            <name>HauntedMC</name>
+            <url>https://www.hauntedmc.nl</url>
+        </developer>
+    </developers>
     <scm>
         <connection>scm:git:https://github.com/HauntedMC/HauntedObservability.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/HauntedMC/HauntedObservability.git</developerConnection>
         <url>https://github.com/HauntedMC/HauntedObservability</url>
         <tag>HEAD</tag>
     </scm>
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/HauntedMC/HauntedObservability/issues</url>
+    </issueManagement>
+    <ciManagement>
+        <system>GitHub Actions</system>
+        <url>https://github.com/HauntedMC/HauntedObservability/actions</url>
+    </ciManagement>
 
     <distributionManagement>
         <repository>
