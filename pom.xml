@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>nl.hauntedmc.platform</groupId>
+        <artifactId>haunted-library-parent</artifactId>
+        <version>1.3.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>nl.hauntedmc.observability</groupId>
+    <artifactId>haunted-observability-parent</artifactId>
+    <version>${revision}</version>
+    <packaging>pom</packaging>
+
+    <name>HauntedObservability</name>
+    <description>OpenTelemetry-based operational observability for HauntedMC applications and shared libraries.</description>
+    <url>https://github.com/HauntedMC/HauntedObservability</url>
+    <inceptionYear>2026</inceptionYear>
+
+    <organization>
+        <name>HauntedMC</name>
+        <url>https://www.hauntedmc.nl</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>GNU Affero General Public License v3.0</name>
+            <url>https://www.gnu.org/licenses/agpl-3.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>HauntedMC</id>
+            <name>HauntedMC</name>
+            <url>https://www.hauntedmc.nl</url>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:https://github.com/HauntedMC/HauntedObservability.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/HauntedMC/HauntedObservability.git</developerConnection>
+        <url>https://github.com/HauntedMC/HauntedObservability</url>
+        <tag>HEAD</tag>
+    </scm>
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/HauntedMC/HauntedObservability/issues</url>
+    </issueManagement>
+    <ciManagement>
+        <system>GitHub Actions</system>
+        <url>https://github.com/HauntedMC/HauntedObservability/actions</url>
+    </ciManagement>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages - HauntedObservability</name>
+            <url>https://maven.pkg.github.com/HauntedMC/HauntedObservability</url>
+        </repository>
+    </distributionManagement>
+
+    <modules>
+        <module>haunted-observability-bom</module>
+        <module>haunted-observability-api</module>
+        <module>haunted-observability-core</module>
+        <module>haunted-observability-testkit</module>
+        <module>haunted-observability-featureframework</module>
+        <module>haunted-observability-dataprovider</module>
+        <module>haunted-observability-dataregistry</module>
+        <module>haunted-observability-paper</module>
+        <module>haunted-observability-velocity</module>
+    </modules>
+
+    <properties>
+        <revision>0.1.0</revision>
+        <project.build.outputTimestamp>2026-08-25T00:00:00Z</project.build.outputTimestamp>
+        <featureframework.version>1.7.0</featureframework.version>
+        <dataprovider.version>3.3.0</dataprovider.version>
+        <dataregistry.version>1.15.0</dataregistry.version>
+        <paper.version>26.2.build.65-beta</paper.version>
+        <velocity.version>4.1.0-SNAPSHOT</velocity.version>
+        <junit.version>${haunted.junit.version}</junit.version>
+    </properties>
+
+    <repositories>
+        <repository><id>central</id><url>https://repo.maven.apache.org/maven2</url></repository>
+        <repository><id>papermc</id><url>https://repo.papermc.io/repository/maven-public/</url></repository>
+        <repository><id>github</id><url>https://maven.pkg.github.com/HauntedMC/*</url></repository>
+    </repositories>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <release>${maven.compiler.release}</release>
+                        <parameters>true</parameters>
+                        <showWarnings>true</showWarnings>
+                        <showDeprecation>true</showDeprecation>
+                        <failOnWarning>true</failOnWarning>
+                        <compilerArgs><arg>-Xlint:all,-processing</arg></compilerArgs>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions><execution><id>sources</id><goals><goal>jar-no-fork</goal></goals></execution></executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <doclint>all,-missing</doclint>
+                            <failOnWarnings>true</failOnWarnings>
+                        </configuration>
+                        <executions><execution><id>javadoc</id><goals><goal>jar</goal></goals></execution></executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

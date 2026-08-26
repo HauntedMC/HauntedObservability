@@ -1,0 +1,98 @@
+package nl.hauntedmc.observability.dataregistry;
+
+import nl.hauntedmc.dataprovider.api.OwnerScope;
+import nl.hauntedmc.dataprovider.api.observation.DataProviderOperationContext;
+import nl.hauntedmc.dataprovider.database.DatabaseType;
+import nl.hauntedmc.dataregistry.api.observation.DataRegistryObservation;
+import nl.hauntedmc.dataregistry.api.observation.DataRegistryObservationScope;
+import nl.hauntedmc.dataregistry.api.observation.DataRegistryOperationContext;
+import nl.hauntedmc.dataregistry.api.observation.DataRegistryOperationOutcome;
+import nl.hauntedmc.featureframework.api.feature.FeatureId;
+import nl.hauntedmc.featureframework.api.observation.FeatureFrameworkObservation;
+import nl.hauntedmc.featureframework.api.observation.FeatureFrameworkObservationScope;
+import nl.hauntedmc.featureframework.api.observation.FeatureFrameworkOperationContext;
+import nl.hauntedmc.featureframework.api.observation.FeatureFrameworkOperationKind;
+import nl.hauntedmc.featureframework.api.observation.FeatureFrameworkOperationOutcome;
+import nl.hauntedmc.observability.dataprovider.DataProviderObservability;
+import nl.hauntedmc.observability.featureframework.FeatureFrameworkObservability;
+import nl.hauntedmc.observability.testkit.InMemoryObservability;
+import org.junit.jupiter.api.Test;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
+class TraceHierarchyTest {
+
+    @Test
+    void propagatesFeatureRegistryAndStorageParentsAcrossVirtualThread() throws InterruptedException {
+        try (InMemoryObservability observability = InMemoryObservability.create()) {
+            var ffObserver = FeatureFrameworkObservability.observer(observability.runtime());
+            var drObserver = DataRegistryObservability.observer(observability.runtime());
+            var dpObserver = DataProviderObservability.observer(observability.runtime());
+
+            FeatureFrameworkObservation featureObservation = ffObserver.start(FeatureFrameworkOperationContext.feature(
+                    FeatureFrameworkOperationKind.FEATURE_LOAD,
+                    FeatureId.of("friends")
+            ));
+            FeatureFrameworkObservationScope featureScope = featureObservation.openScope();
+            try {
+                DataRegistryObservation registryObservation = drObserver.start(
+                        new DataRegistryOperationContext("player.identity.lookup")
+                );
+                Thread worker = Thread.ofVirtual().start(() -> {
+                    DataRegistryObservationScope registryScope = registryObservation.openScope();
+                    try {
+                        var dataObservation = dpObserver.start(new DataProviderOperationContext(
+                                "serverfeatures",
+                                OwnerScope.of("feature:friends"),
+                                DatabaseType.MYSQL,
+                                "relational.queryForSingle"
+                        ));
+                        dataObservation.succeeded();
+                    } finally {
+                        registryScope.close();
+                    }
+                    registryObservation.completed(DataRegistryOperationOutcome.SUCCESS, 1, null);
+                });
+                worker.join();
+            } finally {
+                featureScope.close();
+            }
+            featureObservation.completed(FeatureFrameworkOperationOutcome.SUCCESS, null);
+
+            var featureSpan = findSpan(observability, "featureframework.feature_load");
+            var registrySpan = findSpan(observability, "dataregistry.player.identity.lookup");
+            var dataSpan = findSpan(observability, "dataprovider.relational.queryForSingle");
+
+            assertFalse(featureSpan.getSpanId().isBlank());
+            assertEquals(featureSpan.getSpanId(), registrySpan.getParentSpanId());
+            assertEquals(registrySpan.getSpanId(), dataSpan.getParentSpanId());
+
+            Set<String> metricNames = observability.metrics().stream()
+                    .map(metric -> metric.getName())
+                    .collect(Collectors.toSet());
+            assertEquals(Set.of(
+                    "hauntedmc.featureframework.operation.count",
+                    "hauntedmc.featureframework.operation.duration",
+                    "hauntedmc.dataprovider.operation.count",
+                    "hauntedmc.dataprovider.operation.duration",
+                    "hauntedmc.dataregistry.operation.count",
+                    "hauntedmc.dataregistry.operation.duration",
+                    "hauntedmc.dataregistry.operation.attempts"
+            ), metricNames);
+        }
+    }
+
+    private static io.opentelemetry.sdk.trace.data.SpanData findSpan(
+            InMemoryObservability observability,
+            String name
+    ) {
+        return observability.spans().stream()
+                .filter(span -> span.getName().equals(name))
+                .findFirst()
+                .orElseThrow();
+    }
+}

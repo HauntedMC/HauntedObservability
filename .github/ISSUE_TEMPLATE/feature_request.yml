@@ -1,0 +1,66 @@
+name: Feature Request
+description: Suggest an improvement to HauntedObservability
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        HauntedObservability is infrastructure. Please describe the operational value, compatibility impact, and telemetry/privacy implications.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Public API
+        - Runtime / SDK lifecycle
+        - FeatureFramework adapter
+        - DataProvider adapter
+        - DataRegistry adapter
+        - Paper integration
+        - Velocity integration
+        - Metrics
+        - Traces
+        - Logs
+        - Testkit
+        - Build / CI / publishing
+        - Documentation
+        - Other / not sure
+    validations:
+      required: true
+  - type: checkboxes
+    id: impact
+    attributes:
+      label: Compatibility / telemetry impact
+      options:
+        - label: Public API change
+        - label: New or changed metric dimensions
+        - label: New or changed trace/log attributes
+        - label: Configuration change
+        - label: No compatibility impact expected
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Privacy and cardinality considerations
+      description: Explain whether the proposal introduces new telemetry data, labels, attributes, or unbounded values.
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+    validations:
+      required: false

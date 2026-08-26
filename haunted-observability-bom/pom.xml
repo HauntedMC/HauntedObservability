@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <parent><groupId>nl.hauntedmc.observability</groupId><artifactId>haunted-observability-parent</artifactId><version>${revision}</version></parent>
+    <artifactId>haunted-observability-bom</artifactId>
+    <packaging>pom</packaging>
+    <name>HauntedObservability BOM</name>
+    <dependencyManagement><dependencies>
+        <dependency><groupId>${project.groupId}</groupId><artifactId>haunted-observability-api</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>${project.groupId}</groupId><artifactId>haunted-observability-core</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>${project.groupId}</groupId><artifactId>haunted-observability-featureframework</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>${project.groupId}</groupId><artifactId>haunted-observability-dataprovider</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>${project.groupId}</groupId><artifactId>haunted-observability-dataregistry</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>${project.groupId}</groupId><artifactId>haunted-observability-paper</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>${project.groupId}</groupId><artifactId>haunted-observability-velocity</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>${project.groupId}</groupId><artifactId>haunted-observability-testkit</artifactId><version>${project.version}</version></dependency>
+    </dependencies></dependencyManagement>
+</project>

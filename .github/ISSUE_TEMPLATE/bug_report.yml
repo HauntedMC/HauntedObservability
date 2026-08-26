@@ -1,0 +1,109 @@
+name: Bug Report
+description: Report a HauntedObservability bug or unexpected behavior
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. Remove secrets and sensitive telemetry before submitting.
+  - type: checkboxes
+    id: precheck
+    attributes:
+      label: Pre-check
+      options:
+        - label: I searched existing issues.
+          required: true
+        - label: I tested the latest available release.
+          required: true
+        - label: I removed credentials, player identifiers, SQL/query text, Redis keys/payloads, and private production data.
+          required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Configure ...
+        2. Start ...
+        3. Trigger ...
+        4. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: HauntedObservability version
+      placeholder: 1.x.x
+    validations:
+      required: true
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Runtime
+      options:
+        - Paper
+        - Velocity
+        - Standalone / testkit
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: java
+    attributes:
+      label: Java version
+      placeholder: "25"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Runtime / SDK lifecycle
+        - FeatureFramework adapter
+        - DataProvider adapter
+        - DataRegistry adapter
+        - JVM metrics
+        - Traces
+        - Metrics
+        - Logs
+        - Paper helper
+        - Velocity helper
+        - Testkit
+        - Build / publishing
+        - Documentation
+        - Other / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs / telemetry
+      render: shell
+    validations:
+      required: false
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+    validations:
+      required: false
