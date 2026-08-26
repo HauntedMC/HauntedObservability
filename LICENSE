@@ -196,8 +196,8 @@ and you may offer support or warranty protection for a fee.
   5. Conveying Modified Source Versions.
 
   You may convey a work based on the Program, or the modifications to
-produce it from the Program, in the form of source code under the terms
-of section 4, provided that you also meet all of these conditions:
+produce it from the Program, in the form of source code under the
+terms of section 4, provided that you also meet all of these conditions:
 
     a) The work must carry prominent notices stating that you modified
     it, and giving a relevant date.
@@ -358,7 +358,7 @@ that material) supplement the terms of this License with terms:
     Notices displayed by works containing it; or
 
     c) Prohibiting misrepresentation of the origin of that material, or
-    requiring that modified versions of that material be marked in
+    requiring that modified versions of such material be marked in
     reasonable ways as different from the original version; or
 
     d) Limiting the use for publicity purposes of names of licensors or
@@ -441,12 +441,12 @@ for enforcing compliance by third parties with this License.
   An "entity transaction" is a transaction transferring control of an
 organization, or substantially all assets of one, or subdividing an
 organization, or merging organizations.  If propagation of a covered
-work results from an entity transaction, each party to that transaction
-who receives a copy of the work also receives whatever licenses to the
-work the party's predecessor in interest had or could give under the
-previous paragraph, plus a right to possession of the Corresponding
-Source of the work from the predecessor in interest, if the predecessor
-has it or can get it with reasonable efforts.
+work results from an entity transaction, each party to that
+transaction who receives a copy of the work also receives whatever
+licenses to the work the party's predecessor in interest had or could
+give under the previous paragraph, plus a right to possession of the
+Corresponding Source of the work from the predecessor in interest, if
+the predecessor has it or can get it with reasonable efforts.
 
   You may not impose any further restrictions on the exercise of the
 rights granted or affirmed under this License.  For example, you may
@@ -531,11 +531,11 @@ otherwise be available to you under applicable patent law.
 otherwise) that contradict the conditions of this License, they do not
 excuse you from the conditions of this License.  If you cannot convey a
 covered work so as to satisfy simultaneously your obligations under this
-License and any other pertinent obligations, then as a consequence you
-may not convey it at all.  For example, if you agree to terms that obligate
-you to collect a royalty for further conveying from those to whom you
-convey the Program, the only way you could satisfy both those terms and
-this License would be to refrain entirely from conveying the Program.
+License and any other pertinent obligations, then as a consequence you may
+not convey it at all.  For example, if you agree to terms that obligate you
+to collect a royalty for further conveying from those to whom you convey
+the Program, the only way you could satisfy both those terms and this
+License would be to refrain entirely from conveying the Program.
 
   13. Remote Network Interaction; Use with the GNU General Public License.
 
@@ -626,8 +626,8 @@ free software which everyone can redistribute and change under these terms.
 
   To do so, attach the following notices to the program.  It is safest
 to attach them to the start of each source file to most effectively
-state the exclusion of warranty; and each file should have at least the
-"copyright" line and a pointer to where the full notice is found.
+state the exclusion of warranty; and each file should have at least
+the "copyright" line and a pointer to where the full notice is found.
 
     <one line to give the program's name and a brief idea of what it does.>
     Copyright (C) <year>  <name of author>
