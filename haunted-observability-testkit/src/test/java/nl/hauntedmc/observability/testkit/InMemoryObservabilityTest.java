@@ -50,16 +50,17 @@ class InMemoryObservabilityTest {
             assertEquals(span.getSpanContext().getTraceId(), log.getSpanContext().getTraceId());
             assertEquals(span.getSpanContext().getSpanId(), log.getSpanContext().getSpanId());
 
+            var metrics = observability.metrics();
             String spanDump = observability.spans().toString();
             String logDump = observability.logs().toString();
-            String metricDump = observability.metrics().toString();
+            String metricDump = metrics.toString();
             for (String value : forbidden) {
                 assertFalse(spanDump.contains(value), () -> "span leaked forbidden value: " + value);
                 assertFalse(logDump.contains(value), () -> "log leaked forbidden value: " + value);
                 assertFalse(metricDump.contains(value), () -> "metric leaked forbidden value: " + value);
             }
 
-            Set<String> metricNames = observability.metrics().stream()
+            Set<String> metricNames = metrics.stream()
                     .map(metric -> metric.getName())
                     .collect(Collectors.toSet());
             assertEquals(Set.of(
