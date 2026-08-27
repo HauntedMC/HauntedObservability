@@ -86,6 +86,7 @@ The PR gate also runs the shared HauntedPlatform Maven policy, ShellCheck, a dry
 - [Configuration](docs/CONFIGURATION.md)
 - [Metrics](docs/METRICS.md)
 - [Privacy and cardinality](docs/PRIVACY.md)
+- [v1 acceptance contract](docs/ACCEPTANCE.md)
 - [Release process](docs/RELEASE.md)
 
 ## Project policies
