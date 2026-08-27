@@ -6,6 +6,7 @@ import nl.hauntedmc.observability.core.OperationSpec;
 import nl.hauntedmc.observability.core.TelemetryOperation;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -19,7 +20,14 @@ class InMemoryObservabilityTest {
 
     @Test
     void recordsBoundedSignalsWithoutLeakingFailureMessages() {
-        String secret = "SELECT password FROM players WHERE token=super-secret";
+        List<String> forbidden = List.of(
+                "SECRET_PLAYER_123",
+                "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+                "203.0.113.42",
+                "SELECT password FROM players WHERE token=super-secret",
+                "redis:player:SECRET_PLAYER_123"
+        );
+        String failureMessage = String.join(" | ", forbidden);
         String ownerScope = "feature:friends:runtime";
 
         try (InMemoryObservability observability = InMemoryObservability.create()) {
@@ -29,17 +37,30 @@ class InMemoryObservabilityTest {
                     "mysql",
                     ownerScope
             ));
-            operation.complete("failure", 1, new IllegalStateException(secret));
+            operation.complete("failure", 1, new IllegalStateException(failureMessage));
             operation.complete("failure", 1, new IllegalStateException("second completion"));
 
             assertEquals(1, observability.spans().size());
-            assertEquals(StatusCode.ERROR, observability.spans().getFirst().getStatus().getStatusCode());
-            assertEquals(ownerScope, observability.spans().getFirst().getAttributes().get(OWNER_SCOPE));
-            assertEquals(1, observability.logs().size());
-            assertFalse(observability.spans().toString().contains(secret));
-            assertFalse(observability.logs().toString().contains(secret));
+            var span = observability.spans().getFirst();
+            assertEquals(StatusCode.ERROR, span.getStatus().getStatusCode());
+            assertEquals(ownerScope, span.getAttributes().get(OWNER_SCOPE));
 
-            Set<String> metricNames = observability.metrics().stream()
+            assertEquals(1, observability.logs().size());
+            var log = observability.logs().getFirst();
+            assertEquals(span.getSpanContext().getTraceId(), log.getSpanContext().getTraceId());
+            assertEquals(span.getSpanContext().getSpanId(), log.getSpanContext().getSpanId());
+
+            var metrics = observability.metrics();
+            String spanDump = observability.spans().toString();
+            String logDump = observability.logs().toString();
+            String metricDump = metrics.toString();
+            for (String value : forbidden) {
+                assertFalse(spanDump.contains(value), () -> "span leaked forbidden value: " + value);
+                assertFalse(logDump.contains(value), () -> "log leaked forbidden value: " + value);
+                assertFalse(metricDump.contains(value), () -> "metric leaked forbidden value: " + value);
+            }
+
+            Set<String> metricNames = metrics.stream()
                     .map(metric -> metric.getName())
                     .collect(Collectors.toSet());
             assertEquals(Set.of(

@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 final class SdkObservabilityRuntime implements RecorderBackedRuntime {
     private static final AttributeKey<String> SERVICE_NAMESPACE = AttributeKey.stringKey("service.namespace");
@@ -96,9 +97,10 @@ final class SdkObservabilityRuntime implements RecorderBackedRuntime {
             );
         } catch (RuntimeException failure) {
             closeRuntimeTelemetry(runtimeTelemetry);
-            shutdownQuietly(loggerProvider);
-            shutdownQuietly(meterProvider);
-            shutdownQuietly(tracerProvider);
+            long deadline = System.nanoTime() + config.flushTimeout().toNanos();
+            shutdownBounded(loggerProvider, deadline);
+            shutdownBounded(meterProvider, deadline);
+            shutdownBounded(tracerProvider, deadline);
             throw failure;
         }
     }
@@ -185,9 +187,9 @@ final class SdkObservabilityRuntime implements RecorderBackedRuntime {
         await(tracerProvider.forceFlush(), deadline);
         await(meterProvider.forceFlush(), deadline);
         await(loggerProvider.forceFlush(), deadline);
-        await(tracerProvider.shutdown(), deadline);
-        await(meterProvider.shutdown(), deadline);
-        await(loggerProvider.shutdown(), deadline);
+        shutdownBounded(tracerProvider, deadline);
+        shutdownBounded(meterProvider, deadline);
+        shutdownBounded(loggerProvider, deadline);
     }
 
     @Override public TelemetryRecorder recorder() { return closed.get() ? TelemetryRecorder.noop() : recorder; }
@@ -203,39 +205,43 @@ final class SdkObservabilityRuntime implements RecorderBackedRuntime {
         }
     }
 
+    private static void shutdownBounded(SdkTracerProvider provider, long deadlineNanos) {
+        if (provider != null) shutdownBounded(provider::shutdown, deadlineNanos);
+    }
+
+    private static void shutdownBounded(SdkMeterProvider provider, long deadlineNanos) {
+        if (provider != null) shutdownBounded(provider::shutdown, deadlineNanos);
+    }
+
+    private static void shutdownBounded(SdkLoggerProvider provider, long deadlineNanos) {
+        if (provider != null) shutdownBounded(provider::shutdown, deadlineNanos);
+    }
+
+    private static void shutdownBounded(Supplier<CompletableResultCode> shutdown, long deadlineNanos) {
+        long remaining = deadlineNanos - System.nanoTime();
+        if (remaining <= 0L) return;
+
+        Thread worker = Thread.ofVirtual().name("haunted-observability-shutdown").start(() -> {
+            try {
+                await(shutdown.get(), deadlineNanos);
+            } catch (RuntimeException ignored) {
+                // Provider shutdown is best effort and must never extend application shutdown indefinitely.
+            }
+        });
+        try {
+            worker.join(Math.max(1L, TimeUnit.NANOSECONDS.toMillis(remaining)));
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+        }
+        if (worker.isAlive()) worker.interrupt();
+    }
+
     private static void closeRuntimeTelemetry(RuntimeTelemetry runtimeTelemetry) {
         if (runtimeTelemetry == null) return;
         try {
             runtimeTelemetry.close();
         } catch (RuntimeException ignored) {
             // Observability cleanup must remain fail-open.
-        }
-    }
-
-    private static void shutdownQuietly(SdkTracerProvider provider) {
-        if (provider == null) return;
-        try {
-            provider.shutdown();
-        } catch (RuntimeException ignored) {
-            // Best-effort cleanup after failed startup.
-        }
-    }
-
-    private static void shutdownQuietly(SdkMeterProvider provider) {
-        if (provider == null) return;
-        try {
-            provider.shutdown();
-        } catch (RuntimeException ignored) {
-            // Best-effort cleanup after failed startup.
-        }
-    }
-
-    private static void shutdownQuietly(SdkLoggerProvider provider) {
-        if (provider == null) return;
-        try {
-            provider.shutdown();
-        } catch (RuntimeException ignored) {
-            // Best-effort cleanup after failed startup.
         }
     }
 }
