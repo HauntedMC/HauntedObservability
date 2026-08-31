@@ -17,7 +17,7 @@ permissions:
 jobs:
   maven-policy:
     name: Shared Maven policy
-    uses: HauntedMC/HauntedPlatform/.github/workflows/maven-ci.yml@v1.3.0
+    uses: HauntedMC/HauntedPlatform/.github/workflows/maven-ci.yml@v1.4.1
     with:
       maven-command: ./mvnw -U -B -ntp -DskipTests verify
     secrets:
