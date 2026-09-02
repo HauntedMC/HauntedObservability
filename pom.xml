@@ -80,7 +80,7 @@
         <featureframework.version>1.7.0</featureframework.version>
         <dataprovider.version>3.3.0</dataprovider.version>
         <dataregistry.version>1.15.0</dataregistry.version>
-        <paper.version>26.2.build.115-stable</paper.version>
+        <paper.version>26.2.build.119-stable</paper.version>
         <velocity.version>4.1.0-SNAPSHOT</velocity.version>
         <junit.version>${haunted.junit.version}</junit.version>
     </properties>
