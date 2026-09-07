@@ -10,6 +10,7 @@ import nl.hauntedmc.dataregistry.api.observation.DataRegistryOperationContext;
 import nl.hauntedmc.dataregistry.api.observation.DataRegistryOperationOutcome;
 import nl.hauntedmc.dataregistry.api.player.PlayerData;
 import nl.hauntedmc.dataregistry.api.population.PopulationData;
+import nl.hauntedmc.dataregistry.api.session.NetworkSessionApi;
 import nl.hauntedmc.dataregistry.api.service.FeatureServiceDirectory;
 import nl.hauntedmc.observability.testkit.InMemoryObservability;
 import org.junit.jupiter.api.Test;
@@ -131,6 +132,7 @@ class DataRegistryObservabilityTest {
         return new DataRegistryApi() {
             @Override public PlayerData players() { return null; }
             @Override public PopulationData population() { return null; }
+            @Override public NetworkSessionApi sessions() { return null; }
             @Override public FeatureServiceDirectory featureServices() { return null; }
             @Override public Set<DataRegistryFeature> enabledFeatures() { return Set.of(); }
             @Override public boolean supports(DataRegistryFeature feature) { return false; }
