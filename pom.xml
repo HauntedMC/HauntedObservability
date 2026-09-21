@@ -81,7 +81,7 @@
         <dataprovider.version>3.4.2</dataprovider.version>
         <dataregistry.version>1.18.0</dataregistry.version>
         <velocity.version>4.1.1</velocity.version>
-        <paper.version>26.2.build.123-stable</paper.version>
+        <paper.version>26.2.build.124-stable</paper.version>
         <junit.version>${haunted.junit.version}</junit.version>
     </properties>
 
