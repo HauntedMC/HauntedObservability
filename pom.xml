@@ -7,7 +7,7 @@
     <parent>
         <groupId>nl.hauntedmc.platform</groupId>
         <artifactId>haunted-library-parent</artifactId>
-        <version>1.6.8</version>
+        <version>1.6.10</version>
         <relativePath/>
     </parent>
 
@@ -75,14 +75,12 @@
     </modules>
 
     <properties>
+        <!-- Versions of optional HauntedMC integration APIs this library builds against. -->
+        <haunted.dataprovider.version>3.4.3</haunted.dataprovider.version>
+        <haunted.dataregistry.version>1.18.4</haunted.dataregistry.version>
+        <haunted.featureframework.version>2.2.0</haunted.featureframework.version>
         <revision>1.0.1</revision>
         <project.build.outputTimestamp>2026-08-27T00:00:00Z</project.build.outputTimestamp>
-        <featureframework.version>2.2.0</featureframework.version>
-        <dataprovider.version>3.4.3</dataprovider.version>
-        <dataregistry.version>1.18.4</dataregistry.version>
-        <velocity.version>4.2.0</velocity.version>
-        <paper.version>26.2.build.123-stable</paper.version>
-        <junit.version>${haunted.junit.version}</junit.version>
     </properties>
 
     <repositories>

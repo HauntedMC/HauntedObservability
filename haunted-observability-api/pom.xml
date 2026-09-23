@@ -3,5 +3,5 @@
   <modelVersion>4.0.0</modelVersion>
   <parent><groupId>nl.hauntedmc.observability</groupId><artifactId>haunted-observability-parent</artifactId><version>${revision}</version></parent>
   <artifactId>haunted-observability-api</artifactId><name>HauntedObservability API</name>
-  <dependencies><dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>${junit.version}</version><scope>test</scope></dependency></dependencies>
+  <dependencies><dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency></dependencies>
 </project>

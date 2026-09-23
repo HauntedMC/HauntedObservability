@@ -15,12 +15,12 @@ The default OTLP endpoint is `http://otel-collector:4317`. Export is asynchronou
 ## Dependency foundation
 
 - Java 25
-- HauntedPlatform 1.3.0
-- OpenTelemetry 1.65.0
-- runtime telemetry 2.31.0-alpha
-- FeatureFramework 1.7.0
-- DataProvider 3.3.0
-- DataRegistry 1.15.0
+- HauntedPlatform 1.6.10
+- OpenTelemetry 1.66.0
+- runtime telemetry 2.31.1-alpha
+- FeatureFramework 2.2.0
+- DataProvider 3.4.3
+- DataRegistry 1.18.4
 
 ## Modules
 
