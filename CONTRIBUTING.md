@@ -47,7 +47,7 @@ Preview a bump without modifying the worktree:
 ./update_version.sh --dry-run major
 ```
 
-For the initial stable release, run `./update_version.sh major` from a clean, updated `main`. The helper updates the reactor revision and reproducible-build timestamp, verifies all module versions, executes the release-equivalent gates, creates a local release commit, and creates an annotated `vX.Y.Z` tag. Push the commit and tag only after the helper succeeds. The tag workflow independently verifies the exact release before publishing to GitHub Packages.
+Run `./update_version.sh patch` (or an intentional minor/major bump) from a clean branch. The helper updates the reactor revision and timestamp and checks all module versions. Commit the changes in a reviewed PR. After merge, CI runs the release gate, publishes and resolves the package, then creates `vX.Y.Z`.
 
 ## Pull request checklist
 

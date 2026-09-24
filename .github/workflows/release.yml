@@ -2,61 +2,91 @@ name: Release Package
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [main]
+  workflow_dispatch:
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-main
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
+  packages: write
 
 jobs:
-  release:
-    name: Verify and Publish
+  gate:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    permissions:
-      contents: read
-      packages: write
-    env:
-      PACKAGES_USER: ${{ secrets.HAUNTEDMC_PACKAGES_USERNAME }}
-      PACKAGES_TOKEN: ${{ secrets.HAUNTEDMC_PACKAGES_TOKEN }}
+    outputs:
+      publish: ${{ steps.version.outputs.publish }}
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Validate package token
-        shell: bash
-        run: |
-          test -n "$PACKAGES_USER" || { echo "Missing HAUNTEDMC_PACKAGES_USERNAME" >&2; exit 1; }
-          test -n "$PACKAGES_TOKEN" || { echo "Missing HAUNTEDMC_PACKAGES_TOKEN (read/write packages required)" >&2; exit 1; }
-      - name: Set up JDK 25
+      - id: version
+        name: Detect a reviewed version change
+        env:
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+        run: python3 scripts/release-gate.py pom.xml
+
+  publish:
+    needs: gate
+    if: needs.gate.outputs.publish == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      PACKAGES_USER: ${{ secrets.HAUNTEDMC_PACKAGES_USERNAME }}
+      PACKAGES_TOKEN: ${{ secrets.HAUNTEDMC_PACKAGES_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
+      PLATFORM_ACCEPTANCE_KEEP_WORK_DIRECTORY: 'true'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up JDK 25 and Maven package credentials
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
-          java-version: "25"
+          java-version: '25'
           cache: maven
           server-id: github
           server-username: PACKAGES_USER
           server-password: PACKAGES_TOKEN
-      - name: Validate release version
-        id: release-version
-        shell: bash
+      - name: Require package credentials
         run: |
-          [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Release tag must be vMAJOR.MINOR.PATCH" >&2; exit 1; }
-          PROJECT_VERSION="$(./mvnw -q -ntp -DforceStdout help:evaluate -Dexpression=project.version | tail -n 1)"
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          test "$PROJECT_VERSION" = "$TAG_VERSION" || { echo "Tag $GITHUB_REF_NAME != Maven $PROJECT_VERSION" >&2; exit 1; }
-          echo "value=$PROJECT_VERSION" >> "$GITHUB_OUTPUT"
+          if [[ -z "$PACKAGES_USER" || -z "$PACKAGES_TOKEN" ]]; then
+            echo 'HAUNTEDMC_PACKAGES_USERNAME and HAUNTEDMC_PACKAGES_TOKEN are required.' >&2
+            exit 1
+          fi
       - name: Verify architecture boundaries
         run: bash scripts/verify-architecture.sh
-      - name: Verify exact release reactor
-        run: ./mvnw -U -B -ntp -Prelease install
-      - name: Verify external BOM consumer
-        run: bash scripts/verify-bom-consumer.sh
-      - name: Publish exact release reactor
-        run: ./mvnw -B -ntp -DdeployAtEnd=true -Drevision="${{ steps.release-version.outputs.value }}" -Prelease deploy
+      - name: Verify release reactor and external BOM consumer
+        run: |
+          ./mvnw -U -B -ntp -Prelease install
+          bash scripts/verify-bom-consumer.sh
+      - name: Publish the verified reactor
+        run: ./mvnw -U -B -ntp -DdeployAtEnd=true -Prelease deploy
+      - name: Resolve every published artifact from a fresh Maven repository
+        run: python3 scripts/verify-published.py "${{ needs.gate.outputs.version }}" HauntedObservability
+      - name: Create the release tag only after publication is resolvable
+        run: gh release create "${{ needs.gate.outputs.tag }}" --target "$GITHUB_SHA" --title "HauntedObservability ${{ needs.gate.outputs.tag }}" --generate-notes
+      - name: Create cross-repository GitHub App token
+        id: app
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.HAUNTEDMC_RELEASE_APP_ID }}
+          private-key: ${{ secrets.HAUNTEDMC_RELEASE_APP_PRIVATE_KEY }}
+          owner: HauntedMC
+      - name: Queue reviewed downstream update PRs
+        env:
+          DISPATCH_TOKEN: ${{ steps.app.outputs.token }}
+          RELEASE_VERSION: ${{ needs.gate.outputs.version }}
+        run: |
+          GH_TOKEN="$DISPATCH_TOKEN" gh api repos/HauntedMC/HauntedPlatform/dispatches \
+            --method POST --input - <<EOF
+          {"event_type":"internal-release","client_payload":{"producer":"HauntedObservability","version":"$RELEASE_VERSION"}}
+          EOF

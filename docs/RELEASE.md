@@ -1,11 +1,9 @@
-# Release
+# Release process
 
-The implementation branch starts at `0.1.0`. After the 1.0 implementation PR is merged, run from clean `main`:
+Observability publishes `haunted-observability-bom` for its own modules. Its optional DataProvider, DataRegistry, and FeatureFramework adapters compile against versions selected here.
 
-```bash
-./update_version.sh major
-```
+Prepare a reviewed PR from a clean worktree with `./update_version.sh patch` (or `minor`/`major` for an intentional API change). The helper updates version metadata and leaves the changes for review. Merge only after the repository's CI passes. Do not create or push a release tag manually.
 
-This produces `1.0.0`, runs the release verification gate, creates a release commit, and creates annotated tag `v1.0.0`. Then push the commit and tag. The tag workflow validates tag/version equality, installs and verifies the exact reactor, verifies an external BOM consumer, and deploys atomically to GitHub Packages.
+A version change on `main` starts `.github/workflows/release.yml`. The workflow runs the `release` release profiles, deploys the verified Maven reactor with `deployAtEnd`, resolves the published coordinates from an empty Maven repository, and only then creates tag `vX.Y.Z` and a GitHub Release. The release dispatches HauntedPlatform's dependency reconciler, which proposes reviewed downstream PRs only after the package is available.
 
-After HauntedObservability 1.0.0 is published, HauntedPlatform 1.4.0 becomes the ecosystem alignment release for FeatureFramework 1.7.0, DataProvider 3.3.0, DataRegistry 1.15.0, and HauntedObservability 1.0.0.
+If publication fails before the tag, inspect whether any immutable coordinates were uploaded, fix the problem, then retry with `workflow_dispatch`. Do not overwrite a published version or move a tag. If dispatch fails after the tag, manually run HauntedPlatform's **Reconcile internal dependency PRs** workflow with this repository name and the published version. The [organization release guide](https://github.com/HauntedMC/HauntedPlatform/blob/main/docs/releasing.md) describes the graph and GitHub App setup.
