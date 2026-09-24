@@ -3,7 +3,6 @@ set -euo pipefail
 
 readonly POM_FILE="pom.xml"
 readonly VERSION_PROPERTY="revision"
-readonly VERSIONS_PLUGIN="org.codehaus.mojo:versions-maven-plugin:2.18.0"
 readonly MODULES=(
   haunted-observability-bom
   haunted-observability-api
@@ -22,7 +21,7 @@ usage() {
 Usage: ./update_version.sh [--dry-run] <major|minor|patch>
 
 Bumps HauntedObservability's reactor revision and reproducible-build timestamp,
-executes release-equivalent validation, then creates a local release commit and annotated tag.
+then leaves the changed files for review in a pull request.
 USAGE
 }
 
@@ -90,7 +89,7 @@ fi
 [[ -z "$(git status --porcelain)" ]] || die "Working tree must be clean."
 git rev-parse -q --verify "refs/tags/$TAG" >/dev/null 2>&1 && die "$TAG already exists."
 
-./mvnw -B -ntp "$VERSIONS_PLUGIN:set-property" -Dproperty="$VERSION_PROPERTY" -DnewVersion="$NEW" -DgenerateBackupPoms=false
+./mvnw -B -ntp versions:set-property -Dproperty="$VERSION_PROPERTY" -DnewVersion="$NEW" -DgenerateBackupPoms=false
 update_timestamp "$(date -u +%Y-%m-%dT00:00:00Z)"
 
 [[ "$(resolve_version)" == "$NEW" ]] || die "Root reactor version did not update to $NEW."
@@ -98,12 +97,5 @@ for module in "${MODULES[@]}"; do
   [[ "$(resolve_version "$module")" == "$NEW" ]] || die "$module did not resolve to $NEW."
 done
 
-bash scripts/verify-architecture.sh
-./mvnw -U -B -ntp -Prelease install
-bash scripts/verify-bom-consumer.sh
 git diff --check
-
-git add "$POM_FILE"
-git commit -m "Bump version to $TAG for release"
-git tag --annotate "$TAG" --message "Release $TAG"
-echo "Created release commit and $TAG. Push with: git push origin HEAD && git push origin $TAG"
+echo "Version files prepared. Review and commit them in a pull request; publication will create the tag after verification."
