@@ -10,8 +10,8 @@ import nl.hauntedmc.dataregistry.api.observation.DataRegistryOperationContext;
 import nl.hauntedmc.dataregistry.api.observation.DataRegistryOperationOutcome;
 import nl.hauntedmc.dataregistry.api.player.PlayerData;
 import nl.hauntedmc.dataregistry.api.population.PopulationData;
-import nl.hauntedmc.dataregistry.api.session.NetworkSessionApi;
 import nl.hauntedmc.dataregistry.api.service.FeatureServiceDirectory;
+import nl.hauntedmc.dataregistry.api.session.NetworkSessionApi;
 import nl.hauntedmc.observability.testkit.InMemoryObservability;
 import org.junit.jupiter.api.Test;
 
