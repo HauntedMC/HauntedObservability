@@ -30,7 +30,7 @@ jobs:
       - name: Install pinned release CLI
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh extension install HauntedMC/gh-haunted-release --pin 5165e777de588ab722af44b43b87c26d2baaafb9
+        run: gh extension install HauntedMC/gh-haunted-release --pin de43c102d81797001eef36fe45725744fdd22031
       - name: Verify dependency version ownership
         run: python3 scripts/verify-version-ownership.py
 
@@ -76,7 +76,7 @@ jobs:
       - name: Install pinned release CLI
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh extension install HauntedMC/gh-haunted-release --pin 5165e777de588ab722af44b43b87c26d2baaafb9
+        run: gh extension install HauntedMC/gh-haunted-release --pin de43c102d81797001eef36fe45725744fdd22031
       - shell: bash
         run: |
           mapfile -d '' scripts < <(git ls-files -z '*.sh')
