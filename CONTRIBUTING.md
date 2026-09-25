@@ -19,7 +19,7 @@ Before opening or updating a pull request, run:
 bash scripts/verify-architecture.sh
 ./mvnw -U -B -ntp -Prelease install
 bash scripts/verify-bom-consumer.sh
-./update_version.sh --dry-run patch
+./tools/release/update-version --dry-run patch
 ```
 
 If shell scripts changed, run ShellCheck over tracked `*.sh` files. CI repeats the architecture/privacy boundary checks, strict Java 25 build, release-profile sources/Javadocs, tests, external BOM consumer contract, and shared HauntedPlatform Maven policy.
@@ -44,10 +44,10 @@ Any change to telemetry attributes, span/log contents, metric dimensions, export
 Preview a bump without modifying the worktree:
 
 ```bash
-./update_version.sh --dry-run major
+./tools/release/update-version --dry-run major
 ```
 
-Run `./update_version.sh patch` (or an intentional minor/major bump) from a clean branch. The helper updates the reactor revision and timestamp and checks all module versions. Commit the changes in a reviewed PR. After merge, CI runs the release gate, publishes and resolves the package, then creates `vX.Y.Z`.
+Run `./tools/release/update-version patch` (or an intentional minor/major bump) from a clean branch. The helper updates the reactor revision and timestamp and checks all module versions. Commit the changes in a reviewed PR. After merge, CI runs the release gate, publishes and resolves the package, then creates `vX.Y.Z`.
 
 ## Pull request checklist
 
