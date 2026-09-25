@@ -20,8 +20,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      PACKAGES_USER: ${{ secrets.HAUNTEDMC_PACKAGES_USERNAME }}
-      PACKAGES_TOKEN: ${{ secrets.HAUNTEDMC_PACKAGES_TOKEN }}
+      PACKAGES_USER: ${{ secrets.HAUNTEDMC_PACKAGES_USERNAME || github.actor }}
+      PACKAGES_TOKEN: ${{ secrets.HAUNTEDMC_PACKAGES_TOKEN || github.token }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -30,7 +30,7 @@ jobs:
       - name: Install pinned release CLI
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh extension install HauntedMC/gh-haunted-release --pin ed440a0a2d5ab23af30c36bb22132f8ffa0ea33f
+        run: gh extension install HauntedMC/gh-haunted-release --pin 5165e777de588ab722af44b43b87c26d2baaafb9
       - name: Verify dependency version ownership
         run: python3 scripts/verify-version-ownership.py
 
@@ -53,3 +53,53 @@ jobs:
         run: ./mvnw -U -B -ntp -Prelease install
       - name: Verify external BOM consumer
         run: bash scripts/verify-bom-consumer.sh
+
+  maven-policy:
+    name: Shared Maven policy
+    uses: HauntedMC/HauntedPlatform/.github/workflows/maven-ci.yml@10dfbacc8515208bf3b0ee236a8c7688fda49c9e # release hardening
+    with:
+      maven-command: ./mvnw -U -B -ntp validate
+    secrets:
+      PACKAGES_USER: ${{ secrets.HAUNTEDMC_PACKAGES_USERNAME || github.actor }}
+      PACKAGES_TOKEN: ${{ secrets.HAUNTEDMC_PACKAGES_TOKEN || github.token }}
+
+  shellcheck:
+    name: ShellCheck and release-bump smoke test
+    runs-on: ubuntu-24.04
+    env:
+      PACKAGES_USER: ${{ secrets.HAUNTEDMC_PACKAGES_USERNAME || github.actor }}
+      PACKAGES_TOKEN: ${{ secrets.HAUNTEDMC_PACKAGES_TOKEN || github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned release CLI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh extension install HauntedMC/gh-haunted-release --pin 5165e777de588ab722af44b43b87c26d2baaafb9
+      - shell: bash
+        run: |
+          mapfile -d '' scripts < <(git ls-files -z '*.sh')
+          if (( ${#scripts[@]} > 0 )); then shellcheck tools/release/update-version tools/release/prepare-version.sh "${scripts[@]}"; fi
+      - run: ./tools/release/update-version --dry-run major
+
+  ci-required:
+    name: ci-required
+    if: ${{ always() }}
+    needs: [test, maven-policy, shellcheck]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    env:
+      CHECK_RESULTS: ${{ toJSON(needs) }}
+    steps:
+      - name: Require every validation job
+        run: |
+          python3 - <<'PYTHON'
+          import json
+          import os
+          results = {name: job['result'] for name, job in json.loads(os.environ['CHECK_RESULTS']).items()}
+          failed = {name: result for name, result in results.items() if result != 'success'}
+          if failed:
+              raise SystemExit(f'Validation did not pass: {failed}')
+          PYTHON

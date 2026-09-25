@@ -4,10 +4,10 @@
 
 - Java 25
 - Maven Wrapper (`./mvnw`), pinned by `.mvn/wrapper/maven-wrapper.properties`
-- HauntedPlatform 1.6.10
-- FeatureFramework 2.2.0
-- DataProvider 3.4.3
-- DataRegistry 1.18.4
+- HauntedPlatform 2.0.0
+- FeatureFramework 2.2.1
+- DataProvider 3.4.5
+- DataRegistry 1.18.6
 
 GitHub Packages credentials are required to resolve HauntedMC artifacts. Configure `PACKAGES_USER` and `PACKAGES_TOKEN`; never commit tokens or generated Maven settings containing credentials.
 
@@ -47,7 +47,7 @@ Preview a bump without modifying the worktree:
 ./tools/release/update-version --dry-run major
 ```
 
-Run `./tools/release/update-version patch` (or an intentional minor/major bump) from a clean branch. The helper updates the reactor revision and timestamp and checks all module versions. Commit the changes in a reviewed PR. After merge, CI runs the release gate, publishes and resolves the package, then creates `vX.Y.Z`.
+Run `./tools/release/update-version patch --pr` (or an intentional minor/major bump) from clean, current `main`. The helper prepares the revision and timestamp in an isolated worktree, checks module versions, and opens the PR. An existing branch is revalidated on retry. Merge after `ci-required` passes; the release workflow then publishes, resolves every coordinate, and creates `vX.Y.Z`.
 
 ## Pull request checklist
 
@@ -58,3 +58,7 @@ Run `./tools/release/update-version patch` (or an intentional minor/major bump) 
 - [ ] External BOM consumption passes.
 - [ ] Public API/configuration changes are documented.
 - [ ] No credentials, secrets, private hosts, or production-only configuration are committed.
+
+## Fork pull requests
+
+Fork PRs run with a read-only GitHub token and receive no repository package secrets. CI attempts to resolve public HauntedMC Maven packages with that token and still runs static checks. If GitHub Packages denies cross-repository access, the required Maven check cannot pass on the fork; a maintainer reviews the change and opens an upstream branch PR for full CI before merge. Never include a package token in a PR or build log.
