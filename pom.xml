@@ -76,11 +76,11 @@
 
     <properties>
         <!-- Versions of optional HauntedMC integration APIs this library builds against. -->
-        <haunted.dataprovider.version>3.4.5</haunted.dataprovider.version>
-        <haunted.dataregistry.version>1.18.6</haunted.dataregistry.version>
-        <haunted.featureframework.version>2.2.1</haunted.featureframework.version>
-        <revision>1.0.2</revision>
-        <project.build.outputTimestamp>2026-09-24T00:00:00Z</project.build.outputTimestamp>
+        <haunted.dataprovider.version>3.5.1</haunted.dataprovider.version>
+        <haunted.dataregistry.version>1.19.1</haunted.dataregistry.version>
+        <haunted.featureframework.version>2.2.2</haunted.featureframework.version>
+        <revision>1.0.3</revision>
+        <project.build.outputTimestamp>2026-10-03T00:00:00Z</project.build.outputTimestamp>
     </properties>
 
     <repositories>
