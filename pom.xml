@@ -79,8 +79,8 @@
         <haunted.dataprovider.version>3.5.1</haunted.dataprovider.version>
         <haunted.dataregistry.version>1.19.1</haunted.dataregistry.version>
         <haunted.featureframework.version>2.2.3</haunted.featureframework.version>
-        <revision>1.0.4</revision>
-        <project.build.outputTimestamp>2026-10-18T00:00:00Z</project.build.outputTimestamp>
+        <revision>1.0.5</revision>
+        <project.build.outputTimestamp>2026-11-04T00:00:00Z</project.build.outputTimestamp>
     </properties>
 
     <repositories>
